@@ -1,5 +1,6 @@
 #!/bin/bash
-
+echo ""
+echo ""
 echo "                    ' _ ._  _ , _ ._'"
 echo "                    '(_  (   )_  .__)'"
 echo "                  '( (  (    )   )  ) _)'"
@@ -13,6 +14,19 @@ echo "| Installing latest GO version and GO Offensive tools  |"
 echo "|                                                      |"
 echo "| Bash Script to bring your favorite go tools with you |"
 echo "|______________________________________________________|"
+echo ""
+echo ""
+echo ""
+echo ""
+
+# Initialize an array to store the names of tools that failed to install
+failed_tools=()
+successful_tools=()
+
+# ANSI color codes
+RED='\033[0;31m'  # Red color
+NC='\033[0m'      # No color
+GREEN='\033[0;32m' # Green color
 
 # Function to install Go
 install_go() {
@@ -38,47 +52,216 @@ install_go() {
 
 # Function to install naabu
 install_naabu() {
-   if ! command -v naabu; then
-       echo "Installing naabu..."
-       # Download the latest naabu release
+    echo "---------------------------------------------------------------"
+    echo "Installing naabu..."
+    if ! command -v naabu; then
+        # Download the latest naabu release
        wget $(curl -s https://api.github.com/repos/projectdiscovery/naabu/releases/latest | grep "browser_download_url" | cut -d '"' -f 4 | grep "_linux_amd64.zip")
        # Extract the downloaded zip file
-       unzip naabu_*_linux_amd64.zip -d $HOME/go/bin
+       if error_message=$(unzip naabu_*_linux_amd64.zip -d $HOME/go/bin); then
        # Move naabu binary to /usr/local/bin (you may need sudo)
-       sudo cp $HOME/go/bin/naabu /usr/local/bin/
-       # Clean up
-       rm naabu_*_linux_amd64.zip
-       echo "naabu installed successfully!"
+           sudo cp $HOME/go/bin/naabu /usr/local/bin/
+           # Clean up
+           rm naabu_*_linux_amd64.zip
+           echo "naabu installed successfully!"
+           successful_tools+=("naabu")
+        else
+           echo -e "${RED}Failed to install naabu.${NC}"
+           failed_tools+=("naabu: $error_message")
+        fi
    else
-	echo "Naabu already installed"
-
+           echo "naabu is already installed."
    fi
 }
 
-tui-header
-tui-title "some text of yours"
-tui-header
-
-# Function to install nuclei
+# Function to install nuclei url: https://github.com/projectdiscovery/nuclei
+# check for installation of nuclei in linux
 install_nuclei() {
+    echo "---------------------------------------------------------------"
     echo "Installing nuclei..."
-    go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
-    sudo cp $HOME/go/bin/nuclei /usr/local/bin
-    echo "nuclei installed successfully!"
+    if ! command -v nuclei; then
+        if error_message=$(go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest); then
+            sudo cp $HOME/go/bin/nuclei /usr/local/bin
+            echo "nuclei installed successfully!"
+            successful_tools+=("nuclei")
+        else
+            echo -e "${RED}Failed to install nuclei.${NC}"
+            failed_tools+=("nuclei: $error_message")
+        fi
+    else
+            echo "nuclei is already installed."
+    fi
 }
 
-# Function to install subfinder
+# Function to install subfinder url: https://github.com/projectdiscovery/subfinder
+# check for installation of subfinder in linux
 install_subfinder() {
+    echo "---------------------------------------------------------------"
     echo "Installing subfinder..."
-    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-    sudo cp $HOME/go/bin/subfinder /usr/local/bin
-    echo "subfinder installed successfully!"
+    if ! command -v subfinder; then
+        if error_message=$(go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest); then
+            sudo cp $HOME/go/bin/subfinder /usr/local/bin
+            echo "subfinder installed successfully!"
+            successful_tools+=("subfinder")
+        else
+            echo -e "${RED}Failed to install subfinder.${NC}"
+            failed_tools+=("subfinder: $error_message")
+        fi
+    elserm 0
+            echo "subfinder is already installed."
+    fi
 }
+
+# # Function to install gowitness url: https://github.com/sensepost/gowitness
+# install_gowitness() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing gowitness..."
+#     go install github.com/sensepost/gowitness@latest
+#     sudo cp $HOME/go/bin/gowitness /usr/local/bin
+#     echo "gowitness installed successfully!"
+#     successful_tools+=("gowitness")
+# }
+
+# # Function to install httpx url: https://github.com/projectdiscovery/httpx
+# install_httpx() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing httpx..."
+#     go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+#     sudo cp $HOME/go/bin/httpx /usr/local/bin
+#     echo "httpx installed successfully!"
+#     successful_tools+=("httpx")
+# }
+
+# # Function to install notify url: https://github.com/projectdiscovery/notify
+# install_notify() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing notify..."
+#     go install -v github.com/projectdiscovery/notify/cmd/notify@latest
+#     sudo cp $HOME/go/bin/notify /usr/local/bin
+#     echo "notify installed successfully!"
+#     successful_tools+=("notify")
+# }
+
+# # Function to install assetfinder url: https://github.com/tomnomnom/assetfinder
+# install_assetfinder() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing assetfinder..."
+#     go install github.com/tomnomnom/assetfinder@latest
+#     sudo cp $HOME/go/bin/assetfinder /usr/local/bin
+#     echo "assetfinder installed successfully!"
+#     successful_tools+=("assetfinder")
+# }
+
+# # Function to install waybackurls url: https://github.com/tomnomnom/waybackurls
+# install_waybackurls() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing waybackurls..."
+#     go install github.com/tomnomnom/waybackurls@latest
+#     sudo cp $HOME/go/bin/waybackurls /usr/local/bin
+#     echo "waybackurls installed successfully!"
+#     successful_tools+=("waybackurls")
+# }
+
+# # Function to install gf url: https://github.com/tomnomnom/gf
+# install_gf() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing gf..."
+#     go install github.com/tomnomnom/gf@latest
+#     sudo cp $HOME/go/bin/gf /usr/local/bin
+#     echo "gf installed successfully!"
+#     successful_tools+=("gf")
+# }
+
+# # Function to install shortscan url: https://github.com/bitquark/shortscan
+# install_shortscan() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing IIS shortscan..."
+#     go install github.com/bitquark/shortscan/cmd/shortscan@latest
+#     sudo cp $HOME/go/bin/shortscan /usr/local/bin
+#     echo "shortscan installed successfully!"
+#     successful_tools+=("shortscan")
+# }
+
+# # Function to install anew url: https://github.com/tomnomnom/anew
+# install_anew() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing anew..."
+#     go install -v github.com/tomnomnom/anew@latest
+#     sudo cp $HOME/go/bin/anew /usr/local/bin
+#     echo "anew installed successfully!"
+#     successful_tools+=("anew")
+# }
+
+# # Function to install Go SimpleHTTPServer url: https://github.com/projectdiscovery/simplehttpserver
+# install_simplehttpserver() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing simplehttpserver..."
+#     go install -v github.com/projectdiscovery/simplehttpserver/cmd/simplehttpserver@latest
+#     sudo cp $HOME/go/bin/simplehttpserver /usr/local/bin
+#     echo "simplehttpserver installed successfully!"
+#     successful_tools+=("simplehttpserver")
+# }
+
+# # Function to install ffuf url: https://github.com/ffuf/ffuf
+# install_ffuf() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing ffuf..."
+#     go install github.com/ffuf/ffuf/v2@latest
+#     sudo cp $HOME/go/bin/ffuf /usr/local/bin
+#     echo "ffuf installed successfully!"
+#     successful_tools+=("ffuf")
+# }
+
+# // Function to install amass from https://github.com/owasp-amass/amass
+# install_amass() {
+#     echo "---------------------------------------------------------------"
+#     echo "Installing amass..."
+#     go install -v github.com/owasp-amass/amass/v4/...@master
+#     sudo cp $HOME/go/bin/amass /usr/local/bin
+#     echo "amass installed successfully!"
+#     successful_tools+=("amass")
+# }
+  
 
 # Main script
 install_go
 install_naabu
 install_nuclei
 install_subfinder
+install_gowitness
+install_httpx
+install_notify
+install_assetfinder
+install_waybackurls
+install_gf
+install_shortscan
+install_anew
+install_simplehttpserver
+install_ffuf
+install_amass
 
-echo "All tools installed successfully!"
+
+echo ""
+echo ""
+echo ""
+# Check which tools failed to install and display the list
+if [ ${#successful_tools[@]} -eq 0 ]; then
+    echo "No tools were successfully installed."
+else
+    echo "The following tools ${GREEN}successfully${NC} installed:"
+    for tool_success in "${successful_tools[@]}"; do
+        echo -e "${GREEN}$tool_success${NC}"
+    done
+fi
+
+if [ ${#failed_tools[@]} -eq 0 ]; then
+    echo "No tools failed to install."
+else
+    echo -e "The following tools ${RED}failed${NC} to install:"
+    for tool_error in "${failed_tools[@]}"; do
+        echo -e "${RED}$tool_error${NC}"
+    done
+fi
+echo ""
+echo ""
+echo ""
