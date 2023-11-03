@@ -70,35 +70,6 @@ install_go() {
     fi
 }
 
-# install_go() {
-#     echo "---------------------------------------------------------------"
-#     echo "Installing Go..."
-#     if ! command -v /usr/local/go/bin/go; then
-#         # Download the latest stable Go version from the official website
-#         wget https://go.dev/dl/$(curl -s https://go.dev/dl/ | grep -o 'go[0-9]*\.[0-9]*\.[0-9]*\.linux-amd64\.tar\.gz' | head -n 1) >/dev/null 2>&1
-#         # Extract and install Go
-#         sudo tar -C /usr/local -xzf go*.linux-amd64.tar.gz
-        
-#       # Check if the export line is already present in .bashrc
-#         if ! grep -q "export PATH=\$PATH:/usr/local/go/bin" ~/.bashrc; then
-#             echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-#             source ~/.bashrc
-#         fi
-#         # Check if the export line is already present in .zshrc
-#         if ! grep -q "export PATH=\$PATH:/usr/local/go/bin" ~/.zshrc; then
-#             echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.zshrc
-#             source ~/.zshrc
-#         fi
-#         # Clean up the downloaded tar.gz file
-#         rm go*.linux-amd64.tar.gz
-#         echo "Go installed successfully!"
-#             go version
-#     else
-#         echo -e "${BLUE}Go is already installed${NC}"
-#         go version
-#     fi
-# }
-
 # # Function to install nuclei url: https://github.com/projectdiscovery/nuclei
 install_nuclei() {
     echo "---------------------------------------------------------------"
