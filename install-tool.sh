@@ -193,7 +193,7 @@ install_naabu() {
             # Download the latest naabu release
             wget $(curl -s https://api.github.com/repos/projectdiscovery/naabu/releases/latest | grep "browser_download_url" | cut -d '"' -f 4 | grep "_linux_amd64.zip") >/dev/null 2>&1
             # Extract the downloaded zip file
-            if error_message=$(tar -xvf naabu_*_linux_amd64.zip -d $HOME/go/bin 2>&1 >/dev/null); then
+            if error_message=$(unzip -o naabu_*_linux_amd64.zip -d $HOME/go/bin 2>&1 >/dev/null); then
                 # Move naabu binary to /usr/local/bin (you may need sudo)
                 sudo cp $HOME/go/bin/naabu /usr/local/bin/
                 # Clean up
