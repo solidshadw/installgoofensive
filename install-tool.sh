@@ -708,6 +708,51 @@ install_amass() {
     fi
 }
 
+install_cloudrecon() {
+    echo "---------------------------------------------------------------"
+    echo "Installing CloudRecon..."
+
+    # Check if CloudRecon is found in ~/go/bin/cloudrecon
+    if [ -x "$HOME/go/bin/cloudrecon" ]; then
+        echo -e "${BLUE}CloudRecon is already installed in $HOME/go/bin${NC}"
+        
+        # If not found in /usr/local/bin, copy it there. So, that you are aware of what go tools you have installed
+        if [ ! -x "/usr/local/bin/cloudrecon" ]; then
+            sudo cp "$HOME/go/bin/cloudrecon" "/usr/local/bin/cloudrecon"
+            echo "CloudRecon copied to /usr/local/bin"
+        fi
+    fi
+
+    # Check if CloudRecon is found in /usr/local/bin/cloudrecon
+    if [ -x "/usr/local/bin/cloudrecon" ]; then
+        echo -e "${BLUE}CloudRecon is already installed in /usr/local/bin${NC}"
+        
+        # If not found in ~/go/bin, copy it there
+        if [ ! -x "$HOME/go/bin/cloudrecon" ]; then
+            cp "/usr/local/bin/cloudrecon" "$HOME/go/bin/cloudrecon"
+            echo "CloudRecon copied to $HOME/go/bin"
+        fi
+    fi
+
+    # If not installed in either location, install it
+    if [ ! -x "$HOME/go/bin/cloudrecon" ] && [ ! -x "/usr/local/bin/cloudrecon" ]; then    
+        if ! command -v cloudrecon; then
+            if error_message=$(go install github.com/g0ldencybersec/CloudRecon@latest 2>&1 >/dev/null); then
+                sudo cp $HOME/go/bin/cloudrecon /usr/local/bin
+                echo "CloudRecon installed successfully!"
+                successful_tools+=("cloudrecon")
+            else
+                echo -e "${RED}Failed to install CloudRecon. $error_message${NC}"
+                failed_tools+=("cloudrecon: $error_message")
+            fi
+        else
+            echo -e "${BLUE}CloudRecon is already installed${NC}"
+        fi
+        
+    fi
+}
+
+
 # Main script
 install_go
 install_nuclei
@@ -724,6 +769,7 @@ install_anew
 install_simplehttpserver
 install_ffuf
 install_amass
+install_cloudrecon
 
 
 echo ""
