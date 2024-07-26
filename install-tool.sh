@@ -29,6 +29,21 @@ NC='\033[0m'      # No color
 GREEN='\033[0;32m' # Green color
 BLUE='\033[0;34m'  # Blue color
 
+# Function to check and install prerequisites
+install_prerequisites() {
+    if command -v pacman &> /dev/null; then
+        echo "System is Arch-based."
+        sudo pacman -Syu --needed base-devel --noconfirm
+    elif command -v apt-get &> /dev/null; then
+        echo "System is Debian-based."
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+    else
+        echo -e "${RED}Unsupported system. Please install 'unzip' and 'build-essential' or 'base-devel' manually.${NC}"
+        exit 1
+    fi
+}
+
 # Function to install Go
 install_go() {
     echo "---------------------------------------------------------------"
@@ -97,6 +112,7 @@ install_go_tool() {
 }
 
 # Main script
+install_prerequisites
 install_go
 
 install_go_tool "nuclei" "github.com/projectdiscovery/nuclei/v3/cmd/nuclei" "nuclei"
