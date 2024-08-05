@@ -37,7 +37,7 @@ install_prerequisites() {
     elif command -v apt-get &> /dev/null; then
         echo "System is Debian-based."
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libpcap-dev
     else
         echo -e "${RED}Unsupported system. Please install 'unzip' and 'build-essential' or 'base-devel' manually.${NC}"
         exit 1
