@@ -53,28 +53,33 @@ install_go() {
         sudo tar -C /usr/local -xzf go*.linux-amd64.tar.gz
         rm go*.linux-amd64.tar.gz
 
-        current_shell=$(ps -p $$ -ocomm=)
-        shellrc_file=""
-
-        if [[ "$current_shell" == *"bash"* ]]; then
-            shellrc_file="$HOME/.bashrc"
-        elif [[ "$current_shell" == *"zsh"* ]]; then
-            shellrc_file="$HOME/.zshrc"
+        # Determine the current shell and its config file
+        if [ -n "$ZSH_VERSION" ]; then
+            shell_config="$HOME/.zshrc"
+        elif [ -n "$BASH_VERSION" ]; then
+            shell_config="$HOME/.bashrc"
         else
-            echo "Unknown shell. Add Go to your PATH manually."
-            return 1
+            shell_config="$HOME/.profile"
         fi
 
-        if ! grep -q "export PATH=\$PATH:/usr/local/go/bin" "$shellrc_file"; then
-            echo 'export PATH=$PATH:/usr/local/go/bin' >> "$shellrc_file"
-            source "$shellrc_file"
+        # Add Go to PATH if not already present
+        if ! grep -q "/usr/local/go/bin" "$shell_config"; then
+            echo 'export PATH=$PATH:/usr/local/go/bin' >> "$shell_config"
+            export PATH=$PATH:/usr/local/go/bin
         fi
 
         echo "Go installed successfully!"
-        go version
+        echo "Please run 'source $shell_config' or start a new terminal session to use Go."
     else
         echo -e "${BLUE}Go is already installed${NC}"
+    fi
+    
+    # Verify Go installation
+    if command -v go &> /dev/null; then
         go version
+    else
+        echo -e "${RED}Go installation failed or PATH not set correctly.${NC}"
+        echo "Please check your installation and PATH manually."
     fi
 }
 
