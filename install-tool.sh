@@ -133,7 +133,7 @@ install_go_tool "shortscan" "github.com/bitquark/shortscan/cmd/shortscan" "short
 install_go_tool "anew" "github.com/tomnomnom/anew" "anew"
 install_go_tool "simplehttpserver" "github.com/projectdiscovery/simplehttpserver/cmd/simplehttpserver" "simplehttpserver"
 install_go_tool "ffuf" "github.com/ffuf/ffuf/v2" "ffuf"
-install_go_tool "amass" "github.com/owasp-amass/amass/v4/...@master" "amass"
+install_go_tool "amass" "-v github.com/owasp-amass/amass/v4/...@master" "amass"
 install_go_tool "cloudrecon" "github.com/g0ldencybersec/CloudRecon" "CloudRecon"
 
 echo ""
