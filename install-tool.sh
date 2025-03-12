@@ -48,10 +48,34 @@ install_prerequisites() {
 install_go() {
     echo "---------------------------------------------------------------"
     echo "Installing Go..."
+    
+    # Detect system architecture
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        ARCH_SUFFIX="arm64"
+        echo "Detected ARM64 architecture"
+    else
+        ARCH_SUFFIX="amd64"
+        echo "Detected AMD64 architecture"
+    fi
+    
     if ! command -v /usr/local/go/bin/go &> /dev/null; then
-        wget https://go.dev/dl/$(curl -s https://go.dev/dl/ | grep -o 'go[0-9]*\.[0-9]*\.[0-9]*\.linux-amd64\.tar\.gz' | head -n 1) >/dev/null 2>&1
-        sudo tar -C /usr/local -xzf go*.linux-amd64.tar.gz
-        rm go*.linux-amd64.tar.gz
+        # Download the appropriate version for the detected architecture
+        GO_PACKAGE=$(curl -s https://go.dev/dl/ | grep -o "go[0-9]*\.[0-9]*\.[0-9]*\.linux-${ARCH_SUFFIX}\.tar\.gz" | head -n 1)
+        if [ -z "$GO_PACKAGE" ]; then
+            echo -e "${RED}Failed to find Go package for ${ARCH_SUFFIX} architecture.${NC}"
+            exit 1
+        fi
+        
+        echo "Downloading $GO_PACKAGE..."
+        wget "https://go.dev/dl/$GO_PACKAGE" >/dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to download Go package.${NC}"
+            exit 1
+        fi
+        
+        sudo tar -C /usr/local -xzf "$GO_PACKAGE"
+        rm "$GO_PACKAGE"
 
         # Determine the current shell and its config file
         if [ -n "$ZSH_VERSION" ]; then
