@@ -112,6 +112,12 @@ install_go_tool() {
     local tool_name=$1
     local tool_repo=$2
     local tool_binary=$3
+    local version_suffix="@latest"
+    
+    # Special case for tools that need specific version handling
+    if [[ "$tool_name" == "amass" ]]; then
+        version_suffix="@master"
+    fi
 
     echo "---------------------------------------------------------------"
     echo "Installing $tool_name..."
@@ -129,7 +135,7 @@ install_go_tool() {
             echo "$tool_name copied to $HOME/go/bin"
         fi
     else
-        if error_message=$(go install "$tool_repo@latest" 2>&1 >/dev/null); then
+        if error_message=$(go install "${tool_repo}${version_suffix}" 2>&1 >/dev/null); then
             sudo cp "$HOME/go/bin/$tool_binary" "/usr/local/bin"
             echo "$tool_name installed successfully!"
             successful_tools+=("$tool_name")
@@ -157,7 +163,7 @@ install_go_tool "shortscan" "github.com/bitquark/shortscan/cmd/shortscan" "short
 install_go_tool "anew" "github.com/tomnomnom/anew" "anew"
 install_go_tool "simplehttpserver" "github.com/projectdiscovery/simplehttpserver/cmd/simplehttpserver" "simplehttpserver"
 install_go_tool "ffuf" "github.com/ffuf/ffuf/v2" "ffuf"
-install_go_tool "amass" "-v github.com/owasp-amass/amass/v4/...@master" "amass"
+install_go_tool "amass" "github.com/owasp-amass/amass/v4/..." "amass"
 install_go_tool "cloudrecon" "github.com/g0ldencybersec/CloudRecon" "CloudRecon"
 install_go_tool "gau" "github.com/lc/gau/v2/cmd/gau" "gau"
 install_go_tool "gospider" "github.com/jaeles-project/gospider" "gospider"
