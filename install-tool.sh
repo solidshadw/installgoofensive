@@ -19,19 +19,25 @@ echo ""
 echo ""
 echo ""
 
-# Initialize arrays to store the names of tools that failed or succeeded in installing
 failed_tools=()
 successful_tools=()
 
-# ANSI color codes
-RED='\033[0;31m'  # Red color
-NC='\033[0m'      # No color
-GREEN='\033[0;32m' # Green color
-BLUE='\033[0;34m'  # Blue color
+RED='\033[0;31m'
+NC='\033[0m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
 
-# Function to check and install prerequisites
 install_prerequisites() {
-    if command -v pacman &> /dev/null; then
+    OS=$(uname -s)
+    if [ "$OS" = "Darwin" ]; then
+        echo "System is macOS."
+        if ! command -v brew &> /dev/null; then
+            echo -e "${RED}Homebrew not found. Installing Homebrew...${NC}"
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        brew update
+        brew install coreutils wget unzip
+    elif command -v pacman &> /dev/null; then
         echo "System is Arch-based."
         sudo pacman -Syu --needed base-devel --noconfirm
     elif command -v apt-get &> /dev/null; then
@@ -44,13 +50,14 @@ install_prerequisites() {
     fi
 }
 
-# Function to install Go
 install_go() {
     echo "---------------------------------------------------------------"
     echo "Installing Go..."
-    
-    # Detect system architecture
+
+    OS=$(uname -s)
     ARCH=$(uname -m)
+
+    # Detect architecture and OS for Go
     if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
         ARCH_SUFFIX="arm64"
         echo "Detected ARM64 architecture"
@@ -58,26 +65,36 @@ install_go() {
         ARCH_SUFFIX="amd64"
         echo "Detected AMD64 architecture"
     fi
-    
-    if ! command -v /usr/local/go/bin/go &> /dev/null; then
-        # Download the appropriate version for the detected architecture
-        GO_PACKAGE=$(curl -s https://go.dev/dl/ | grep -o "go[0-9]*\.[0-9]*\.[0-9]*\.linux-${ARCH_SUFFIX}\.tar\.gz" | head -n 1)
+
+    if [ "$OS" = "Darwin" ]; then
+        GO_OS="darwin"
+    else
+        GO_OS="linux"
+    fi
+
+    if ! command -v go &> /dev/null; then
+        GO_PACKAGE=$(curl -s https://go.dev/dl/ | grep -o "go[0-9]*\.[0-9]*\.[0-9]*\.${GO_OS}-${ARCH_SUFFIX}\.tar\.gz" | head -n 1)
         if [ -z "$GO_PACKAGE" ]; then
-            echo -e "${RED}Failed to find Go package for ${ARCH_SUFFIX} architecture.${NC}"
+            echo -e "${RED}Failed to find Go package for ${GO_OS}-${ARCH_SUFFIX}.${NC}"
             exit 1
         fi
-        
+
         echo "Downloading $GO_PACKAGE..."
         wget "https://go.dev/dl/$GO_PACKAGE" >/dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo -e "${RED}Failed to download Go package.${NC}"
             exit 1
         fi
-        
-        sudo tar -C /usr/local -xzf "$GO_PACKAGE"
+
+        # For macOS, use different install command
+        if [ "$OS" = "Darwin" ]; then
+            sudo rm -rf /usr/local/go
+            sudo tar -C /usr/local -xzf "$GO_PACKAGE"
+        else
+            sudo tar -C /usr/local -xzf "$GO_PACKAGE"
+        fi
         rm "$GO_PACKAGE"
 
-        # Determine the current shell and its config file
         if [ -n "$ZSH_VERSION" ]; then
             shell_config="$HOME/.zshrc"
         elif [ -n "$BASH_VERSION" ]; then
@@ -86,7 +103,6 @@ install_go() {
             shell_config="$HOME/.profile"
         fi
 
-        # Add Go to PATH if not already present
         if ! grep -q "/usr/local/go/bin" "$shell_config"; then
             echo 'export PATH=$PATH:/usr/local/go/bin' >> "$shell_config"
             export PATH=$PATH:/usr/local/go/bin
@@ -97,8 +113,7 @@ install_go() {
     else
         echo -e "${BLUE}Go is already installed${NC}"
     fi
-    
-    # Verify Go installation
+
     if command -v go &> /dev/null; then
         go version
     else
@@ -107,14 +122,12 @@ install_go() {
     fi
 }
 
-# Function to install a Go tool
 install_go_tool() {
     local tool_name=$1
     local tool_repo=$2
     local tool_binary=$3
     local version_suffix="@latest"
-    
-    # Special case for tools that need specific version handling
+
     if [[ "$tool_name" == "amass" ]]; then
         version_suffix="@master"
     fi
@@ -122,21 +135,24 @@ install_go_tool() {
     echo "---------------------------------------------------------------"
     echo "Installing $tool_name..."
 
-    if [ -x "$HOME/go/bin/$tool_binary" ]; then
-        echo -e "${BLUE}$tool_name is already installed in $HOME/go/bin${NC}"
+    # Use GOPATH/bin for Go <1.17, otherwise use ~/go/bin
+    GOBIN="$HOME/go/bin"
+
+    if [ -x "$GOBIN/$tool_binary" ]; then
+        echo -e "${BLUE}$tool_name is already installed in $GOBIN${NC}"
         if [ ! -x "/usr/local/bin/$tool_binary" ]; then
-            sudo cp "$HOME/go/bin/$tool_binary" "/usr/local/bin/$tool_binary"
+            sudo cp "$GOBIN/$tool_binary" "/usr/local/bin/$tool_binary"
             echo "$tool_name copied to /usr/local/bin"
         fi
     elif [ -x "/usr/local/bin/$tool_binary" ]; then
         echo -e "${BLUE}$tool_name is already installed in /usr/local/bin${NC}"
-        if [ ! -x "$HOME/go/bin/$tool_binary" ]; then
-            cp "/usr/local/bin/$tool_binary" "$HOME/go/bin/$tool_binary"
-            echo "$tool_name copied to $HOME/go/bin"
+        if [ ! -x "$GOBIN/$tool_binary" ]; then
+            cp "/usr/local/bin/$tool_binary" "$GOBIN/$tool_binary"
+            echo "$tool_name copied to $GOBIN"
         fi
     else
         if error_message=$(go install "${tool_repo}${version_suffix}" 2>&1 >/dev/null); then
-            sudo cp "$HOME/go/bin/$tool_binary" "/usr/local/bin"
+            sudo cp "$GOBIN/$tool_binary" "/usr/local/bin"
             echo "$tool_name installed successfully!"
             successful_tools+=("$tool_name")
         else
@@ -146,7 +162,6 @@ install_go_tool() {
     fi
 }
 
-# Main script
 install_prerequisites
 install_go
 
@@ -176,7 +191,6 @@ install_go_tool "qsreplace" "github.com/tomnomnom/qsreplace" "qsreplace"
 echo ""
 echo ""
 echo ""
-# Check which tools failed to install and display the list
 if [ ${#successful_tools[@]} -eq 0 ]; then
     echo "No tools were successfully installed."
 else
